@@ -1,0 +1,2026 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>STRATEGY S — SMC ANTI-GRAVITY LIQUIDITY TERMINAL v2.0</title>
+<meta name="description" content="Strategy S Watchman v2.0 — SMC Anti-Gravity Liquidity Terminal. Institutional-grade quantitative trading dashboard built on Smart Money Concepts."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-void: #05070B;
+    --bg-panel: #080B12;
+    --bg-panel2: #0A0E18;
+    --border: rgba(148,163,184,0.12);
+    --border-bright: rgba(148,163,184,0.22);
+    --neon-green: #00FF87;
+    --neon-green-dim: rgba(0,255,135,0.15);
+    --neon-green-glow: 0 0 8px #00FF87, 0 0 20px rgba(0,255,135,0.5), 0 0 40px rgba(0,255,135,0.2);
+    --neon-purple: #BF5FFF;
+    --neon-magenta: #FF2D78;
+    --neon-orange: #FF6B00;
+    --neon-cyan: #00D4FF;
+    --neon-yellow: #FFE500;
+    --text-primary: #E2E8F0;
+    --text-dim: #64748B;
+    --text-muted: #334155;
+    --font-mono: 'Share Tech Mono', monospace;
+    --font-ui: 'Rajdhani', sans-serif;
+    --font-display: 'Orbitron', monospace;
+  }
+
+  html { scroll-behavior: smooth; height: 100%; }
+
+  body {
+    background: var(--bg-void);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ─── SCANLINE OVERLAY ─── */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,255,135,0.012) 2px,
+      rgba(0,255,135,0.012) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ─── VIGNETTE ─── */
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.6) 100%);
+    pointer-events: none;
+    z-index: 9998;
+  }
+
+  /* ── TERMINAL WRAPPER: desktop = 100vh locked, mobile = scroll ── */
+  .terminal-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    z-index: 1;
+    padding: 0 16px; /* mobile: snug padding */
+  }
+
+  @media (min-width: 768px) {
+    html { overflow: hidden; }
+    body { height: 100vh; overflow: hidden; }
+    .terminal-wrapper {
+      height: 100vh;
+      overflow: hidden;
+      padding: 0 60px; /* desktop: luxurious breathing room */
+    }
+  }
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px 0;
+    background: linear-gradient(90deg, rgba(0,255,135,0.04) 0%, transparent 40%, transparent 60%, rgba(0,212,255,0.04) 100%);
+    border-bottom: 1px solid var(--border-bright);
+    flex-shrink: 0;
+    z-index: 100;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .header-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .logo-icon {
+    width: 34px; height: 34px;
+    border: 1px solid var(--neon-green);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: var(--neon-green-glow);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .logo-icon::before {
+    content: '◈';
+    color: var(--neon-green);
+    font-size: 14px;
+    text-shadow: var(--neon-green-glow);
+    animation: logoSpin 8s linear infinite;
+  }
+
+  @keyframes logoSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .header-title {
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 0.15em;
+  }
+
+  .header-title span {
+    color: var(--neon-green);
+    text-shadow: var(--neon-green-glow);
+  }
+
+  .header-subtitle {
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  .header-center {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .stat-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 5px 14px;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+  }
+
+  .stat-chip-label { font-size: 13px; color: var(--text-dim); letter-spacing: 0.12em; text-transform: uppercase; }
+  .stat-chip-value { font-size: 20px; font-family: var(--font-display); color: var(--neon-green); text-shadow: var(--neon-green-glow); }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .live-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border: 1px solid rgba(0,255,135,0.4);
+    background: rgba(0,255,135,0.06);
+    font-size: 15px;
+    letter-spacing: 0.12em;
+    color: var(--neon-green);
+    text-shadow: var(--neon-green-glow);
+    box-shadow: inset 0 0 12px rgba(0,255,135,0.05), 0 0 12px rgba(0,255,135,0.1);
+  }
+
+  .live-dot {
+    width: 7px; height: 7px;
+    background: var(--neon-green);
+    border-radius: 50%;
+    box-shadow: var(--neon-green-glow);
+    animation: livePulse 1.4s ease-in-out infinite;
+  }
+
+  @keyframes livePulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+  }
+
+  .utc-clock {
+    font-family: var(--font-display);
+    font-size: 17px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+  }
+
+  /* ══════════════════════════════════════
+     TICKER TAPE
+  ══════════════════════════════════════ */
+  .ticker-tape {
+    overflow: hidden;
+    background: rgba(0,0,0,0.4);
+    border-bottom: 1px solid var(--border);
+    padding: 3px 0;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .ticker-inner {
+    display: inline-flex;
+    gap: 0;
+    animation: tickerScroll 40s linear infinite;
+  }
+
+  @keyframes tickerScroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  .ticker-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 24px;
+    font-size: 12px;
+    color: var(--text-dim);
+    border-right: 1px solid var(--border);
+  }
+
+  .ticker-item .sym { color: var(--text-primary); font-weight: bold; }
+  .ticker-item .pos { color: var(--neon-green); text-shadow: 0 0 8px rgba(0,255,135,0.6); }
+  .ticker-item .neg { color: var(--neon-magenta); text-shadow: 0 0 8px rgba(255,45,120,0.6); }
+
+  /* ── DASHBOARD GRID ── */
+  .dashboard-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 8px;
+    padding-bottom: 16px;
+  }
+
+  @media (min-width: 768px) {
+    .dashboard-grid {
+      display: grid;
+      gap: 6px;
+      margin-top: 6px;
+      padding-bottom: 0;
+      flex: 1;
+      overflow: hidden;
+      min-height: 0;
+      grid-template-rows: 1fr 1fr 1fr;
+    }
+  }
+
+  .panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 260px; /* mobile: enough to show content */
+  }
+
+  @media (min-width: 768px) {
+    .panel { min-height: 0; } /* desktop: grid controls height */
+  }
+
+  .panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--panel-accent, var(--neon-green)), transparent);
+    opacity: 0.5;
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 12px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(0,0,0,0.25);
+  }
+
+  .panel-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--text-primary);
+    text-transform: uppercase;
+  }
+
+  .panel-title::before {
+    content: '◆';
+    font-size: 7px;
+    color: var(--panel-accent, var(--neon-green));
+    text-shadow: 0 0 8px var(--panel-accent, var(--neon-green));
+  }
+
+  .panel-meta {
+    display: flex;
+    gap: 12px;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+  }
+
+  .panel-body {
+    padding: 10px;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* ══════════════════════════════════════
+     BLOCK 1: DUAL-TRACK RETURNS
+  ══════════════════════════════════════ */
+  #block-returns {
+    --panel-accent: var(--neon-green);
+  }
+
+  .returns-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    flex: 1;
+    min-height: 0;
+  }
+
+  @media (min-width: 768px) {
+    .returns-grid {
+      grid-template-columns: 1fr 1fr 280px;
+    }
+  }
+
+  .returns-main {
+    padding: 10px 12px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  .returns-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  .returns-headline {
+    font-family: var(--font-display);
+    font-size: 50px;
+    font-weight: 900;
+    color: var(--neon-green);
+    text-shadow: var(--neon-green-glow);
+    line-height: 1;
+    animation: numberGlow 3s ease-in-out infinite;
+  }
+
+  @keyframes numberGlow {
+    0%, 100% { text-shadow: 0 0 8px #00FF87, 0 0 20px rgba(0,255,135,0.5), 0 0 40px rgba(0,255,135,0.2); }
+    50% { text-shadow: 0 0 12px #00FF87, 0 0 30px rgba(0,255,135,0.7), 0 0 60px rgba(0,255,135,0.3); }
+  }
+
+  .returns-sub {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  .returns-sub strong { color: var(--text-primary); }
+
+  .trade-badges {
+    display: flex;
+    gap: 6px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    padding: 4px 10px;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    border: 1px solid;
+    text-transform: uppercase;
+  }
+
+  .badge-green { border-color: rgba(0,255,135,0.4); color: var(--neon-green); background: rgba(0,255,135,0.06); }
+  .badge-purple { border-color: rgba(191,95,255,0.4); color: var(--neon-purple); background: rgba(191,95,255,0.06); }
+  .badge-orange { border-color: rgba(255,107,0,0.4); color: var(--neon-orange); background: rgba(255,107,0,0.06); }
+  .badge-cyan { border-color: rgba(0,212,255,0.4); color: var(--neon-cyan); background: rgba(0,212,255,0.06); }
+
+  .returns-tracks {
+    padding: 8px 12px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .track-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 10px;
+    border: 1px solid var(--border);
+    background: rgba(0,0,0,0.3);
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+
+  .track-row:hover { border-color: var(--border-bright); }
+
+  .track-row::after {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--track-color, var(--neon-green));
+    box-shadow: 0 0 8px var(--track-color, var(--neon-green));
+  }
+
+  .track-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    line-height: 1.6;
+  }
+
+  .track-label strong { display: block; font-size: 13px; color: var(--text-primary); }
+
+  .track-value {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 700;
+    text-align: right;
+  }
+
+  .track-value small {
+    display: block;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--text-dim);
+    font-weight: normal;
+  }
+
+  .returns-chart {
+    padding: 10px;
+    display: flex;
+    align-items: stretch;
+    position: relative;
+  }
+
+  .returns-chart canvas { width: 100% !important; }
+
+  /* ══════════════════════════════════════
+     BLOCK 2: LIQUIDITY LATTICE
+  ══════════════════════════════════════ */
+  #block-lattice {
+    --panel-accent: var(--neon-purple);
+  }
+
+  .lattice-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    flex: 1;
+    min-height: 0;
+  }
+
+  @media (min-width: 768px) {
+    .lattice-grid {
+      grid-template-columns: 1fr 3fr 1fr;
+    }
+  }
+
+  .lattice-grid > div {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .lattice-stats {
+    padding: 8px 10px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .stat-row:last-child { border-bottom: none; }
+  .stat-key { font-size: 13px; color: var(--text-dim); letter-spacing: 0.08em; text-transform: uppercase; }
+  .stat-val { font-size: 15px; color: var(--text-primary); font-family: var(--font-mono); }
+  .stat-val.green { color: var(--neon-green); text-shadow: 0 0 8px rgba(0,255,135,0.5); }
+  .stat-val.purple { color: var(--neon-purple); text-shadow: 0 0 8px rgba(191,95,255,0.5); }
+  .stat-val.orange { color: var(--neon-orange); text-shadow: 0 0 8px rgba(255,107,0,0.5); }
+  .stat-val.magenta { color: var(--neon-magenta); text-shadow: 0 0 8px rgba(255,45,120,0.5); }
+  .stat-val.cyan { color: var(--neon-cyan); text-shadow: 0 0 8px rgba(0,212,255,0.5); }
+
+  .lattice-chart {
+    padding: 8px;
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .lattice-insight {
+    padding: 8px 10px;
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .insight-block {
+    padding: 4px 8px;
+    border: 1px solid var(--border);
+    background: rgba(0,0,0,0.3);
+    position: relative;
+  }
+
+  .insight-block::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: var(--insight-color, var(--neon-purple));
+    opacity: 0.5;
+  }
+
+  .insight-label { font-size: 13px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 1px; }
+  .insight-value { font-family: var(--font-display); font-size: 20px; }
+  .insight-desc { font-size: 12px; color: var(--text-dim); margin-top: 1px; }
+
+  /* Block 3 removed — OB & ATR module retired for performance */
+
+  /* ══════════════════════════════════════
+     BLOCK 4: 3-TF RESONANCE
+  ══════════════════════════════════════ */
+  #block-resonance {
+    --panel-accent: var(--neon-cyan);
+  }
+
+  .resonance-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    flex: 1;
+    min-height: 0;
+  }
+
+  @media (min-width: 768px) {
+    .resonance-grid {
+      grid-template-columns: 200px 1fr 220px;
+    }
+  }
+
+  /* Hide canvas animation on mobile — prevent heat + lag */
+  .resonance-canvas-area {
+    display: none;
+    position: relative;
+    align-items: stretch;
+    justify-content: center;
+    overflow: hidden;
+    min-height: 0;
+    flex: 1;
+  }
+
+  @media (min-width: 768px) {
+    .resonance-canvas-area { display: flex; }
+  }
+
+  .tf-node-status {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    background: rgba(0,0,0,0.3);
+  }
+
+  .tf-node-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+  }
+
+  .tf-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    transition: all 0.3s;
+  }
+
+  .tf-dot.active {
+    animation: tfNodePulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes tfNodePulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  .tf-label { color: var(--text-dim); flex: 1; letter-spacing: 0.08em; }
+  .tf-state { font-family: var(--font-mono); font-size: 9px; }
+
+  .resonance-canvas-area {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    overflow: hidden;
+    min-height: 0;
+    flex: 1;
+  }
+
+  .resonance-grid > div {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .resonance-controls {
+    padding: 8px 10px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  #resonanceCanvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+  }
+
+  .resonance-signal {
+    padding: 8px 10px;
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .signal-display {
+    text-align: center;
+    padding: 8px;
+    border: 1px solid var(--border);
+    background: rgba(0,0,0,0.4);
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .signal-display.signal-active {
+    border-color: rgba(0,255,135,0.6);
+    background: rgba(0,255,135,0.04);
+    box-shadow: inset 0 0 20px rgba(0,255,135,0.04), 0 0 20px rgba(0,255,135,0.1);
+  }
+
+  .signal-label { font-size: 10px; color: var(--text-dim); letter-spacing: 0.2em; text-transform: uppercase; }
+  .signal-value { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin: 4px 0; }
+  .signal-desc { font-size: 10px; color: var(--text-dim); line-height: 1.4; }
+
+  .confidence-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 6px;
+  }
+
+  .confidence-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--neon-green), var(--neon-cyan));
+    box-shadow: 0 0 8px rgba(0,255,135,0.5);
+    transition: width 0.8s ease;
+    border-radius: 2px;
+  }
+
+  /* ══════════════════════════════════════
+     BOTTOM STATUS BAR
+  ══════════════════════════════════════ */
+  .status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 0;
+    border-top: 1px solid var(--border);
+    background: rgba(0,0,0,0.5);
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    flex-shrink: 0;
+  }
+
+  .status-bar-left, .status-bar-right { display: flex; gap: 16px; align-items: center; }
+  .status-item { display: flex; gap: 6px; align-items: center; }
+  .status-key { color: var(--text-muted); }
+  .status-val { color: var(--text-primary); }
+  .status-val.accent { color: var(--neon-green); text-shadow: 0 0 6px rgba(0,255,135,0.5); }
+
+  /* ══════════════════════════════════════
+     GLOW UTILITIES
+  ══════════════════════════════════════ */
+  .glow-green { color: var(--neon-green); text-shadow: var(--neon-green-glow); }
+  .glow-purple { color: var(--neon-purple); text-shadow: 0 0 8px var(--neon-purple), 0 0 20px rgba(191,95,255,0.4); }
+  .glow-magenta { color: var(--neon-magenta); text-shadow: 0 0 8px var(--neon-magenta), 0 0 20px rgba(255,45,120,0.4); }
+  .glow-orange { color: var(--neon-orange); text-shadow: 0 0 8px var(--neon-orange), 0 0 20px rgba(255,107,0,0.4); }
+  .glow-cyan { color: var(--neon-cyan); text-shadow: 0 0 8px var(--neon-cyan), 0 0 20px rgba(0,212,255,0.4); }
+
+  /* ══════════════════════════════════════
+     MINI SPARKLINES
+  ══════════════════════════════════════ */
+  .mini-chart-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+  }
+
+  .mini-spark {
+    flex: 1;
+    min-width: 100px;
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    background: rgba(0,0,0,0.3);
+  }
+
+  .mini-spark-label { font-size: 10px; color: var(--text-dim); letter-spacing: 0.1em; margin-bottom: 4px; }
+  .mini-spark canvas { width: 100% !important; height: 36px !important; }
+
+  /* ══════════════════════════════════════
+     PROGRESS BARS (styled)
+  ══════════════════════════════════════ */
+  .prog-bar-wrap {
+    margin-top: 3px;
+    height: 3px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 1px;
+    overflow: hidden;
+  }
+
+  .prog-bar-fill {
+    height: 100%;
+    border-radius: 1px;
+    transition: width 1s ease;
+  }
+
+  /* ══════════════════════════════════════
+     RESPONSIVE TWEAKS
+  ══════════════════════════════════════ */
+  /* Mobile: fix returns-chart height, hide complex lattice chart */
+  @media (max-width: 767px) {
+    .returns-chart { min-height: 180px; border-top: 1px solid var(--border); }
+    .lattice-chart { min-height: 200px; }
+    .resonance-grid { grid-template-columns: 1fr; }
+    .ticker-tape { display: none; } /* save space on mobile */
+    .status-bar { display: none; } /* simplify mobile view */
+    .panel { min-height: 0; } /* allow natural sizing on mobile */
+    /* Show a mobile-only summary bar instead */
+  }
+
+  /* ══════════════════════════════════════
+     ANIMATIONS
+  ══════════════════════════════════════ */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .panel { animation: fadeInUp 0.5s ease forwards; }
+  #block-returns { animation-delay: 0.05s; }
+  #block-lattice { animation-delay: 0.1s; }
+  #block-resonance { animation-delay: 0.15s; }
+
+  /* Flicker on load */
+  @keyframes terminalBoot {
+    0% { opacity: 0; }
+    5% { opacity: 0.8; }
+    8% { opacity: 0.2; }
+    12% { opacity: 1; }
+  }
+
+  .terminal-wrapper { animation: terminalBoot 0.6s ease forwards; }
+
+  /* ══════════════════════════════════════
+     MATRIX RAIN BG (subtle)
+  ══════════════════════════════════════ */
+  #matrixCanvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    opacity: 0.03;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .terminal-wrapper { position: relative; z-index: 1; }
+
+  /* ══════════════════════════════════════
+     HOVER EFFECTS ON PANELS
+  ══════════════════════════════════════ */
+  .panel {
+    transition: border-color 0.3s;
+  }
+
+  .panel:hover {
+    border-color: rgba(148,163,184,0.2);
+  }
+
+</style>
+</head>
+<body>
+
+<!-- Matrix rain background -->
+<canvas id="matrixCanvas"></canvas>
+
+<div class="terminal-wrapper">
+
+  <!-- ════════════════════════ HEADER ════════════════════════ -->
+  <header class="header">
+    <div class="header-left">
+      <div class="header-logo">
+        <div class="logo-icon"></div>
+        <div>
+          <div class="header-title">STRATEGY <span>S</span> — WATCHMAN <span>v2.0</span></div>
+          <div class="header-subtitle">SMC ANTI-GRAVITY LIQUIDITY TERMINAL · INSTITUTIONAL GRADE</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-center">
+      <div class="stat-chip">
+        <span class="stat-chip-label">Total Trades</span>
+        <span class="stat-chip-value">1,666</span>
+      </div>
+      <div class="stat-chip">
+        <span class="stat-chip-label">Win Rate</span>
+        <span class="stat-chip-value">86.83%</span>
+      </div>
+      <div class="stat-chip">
+        <span class="stat-chip-label">Sharpe</span>
+        <span class="stat-chip-value">4.71</span>
+      </div>
+      <div class="stat-chip">
+        <span class="stat-chip-label">Max DD</span>
+        <span class="stat-chip-value" style="color:var(--neon-orange);text-shadow:0 0 8px rgba(255,107,0,0.5);">−8.3%</span>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div class="live-badge">
+        <div class="live-dot"></div>
+        LIVE ON BITGET SANDBOX
+      </div>
+      <div class="utc-clock" id="utcClock">--:--:-- UTC</div>
+    </div>
+  </header>
+
+  <!-- ════════════════════════ TICKER TAPE ════════════════════════ -->
+  <div class="ticker-tape">
+    <div class="ticker-inner" id="tickerInner">
+      <!-- populated by JS -->
+    </div>
+  </div>
+
+  <!-- ════════════════════════ DASHBOARD ════════════════════════ -->
+  <div class="dashboard-grid">
+
+    <!-- ══ BLOCK 1: DUAL-TRACK RETURNS ══ -->
+    <div class="panel" id="block-returns">
+      <div class="panel-header">
+        <div class="panel-title">DUAL-TRACK CUMULATIVE RETURN OVERVIEW</div>
+        <div class="panel-meta">
+          <span>FIXED-CAPITAL TRACK ↔ COMPOUND TRACK</span>
+          <span>|</span>
+          <span>INCEPTION → NOW</span>
+          <span>|</span>
+          <span id="tradeCount">1,666 FILLS</span>
+        </div>
+      </div>
+      <div class="panel-body" style="padding:0;flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column">
+        <div class="returns-grid">
+
+          <!-- Total P&L -->
+          <div class="returns-main">
+            <div class="returns-label">STRATEGY S · TOTAL CUMULATIVE RETURN</div>
+            <div class="returns-headline" id="totalReturn">+4,170.14%</div>
+            <div class="returns-sub">
+              Realised · <strong>1,666 trades</strong> · Avg Hold <strong>2.4H</strong>
+            </div>
+            <div class="trade-badges">
+              <span class="badge badge-green">WR 86.83%</span>
+              <span class="badge badge-purple">PF 3.21</span>
+              <span class="badge badge-orange">RRR 2.8</span>
+              <span class="badge badge-cyan">SHARPE 4.71</span>
+            </div>
+            <div style="margin-top:12px;font-size:12px;color:var(--text-dim)">
+              <span style="margin-right:12px">BEST DAY <span style="color:var(--neon-green)">+312.4%</span></span>
+              <span>MAX DD <span style="color:var(--neon-orange)">−8.27%</span></span>
+            </div>
+          </div>
+
+          <!-- Track breakdown -->
+          <div class="returns-tracks">
+            <div style="font-size:9px;color:var(--text-dim);letter-spacing:0.15em;margin-bottom:4px">PARALLEL EQUITY TRACKS</div>
+
+            <div class="track-row" style="--track-color:var(--neon-cyan)">
+              <div class="track-label">
+                <strong>Fixed Principal</strong>
+                $10,000 base / constant position
+              </div>
+              <div class="track-value" style="color:var(--neon-cyan);text-shadow:0 0 8px var(--neon-cyan)">
+                +310.01%
+                <small>$41,001.00 current value</small>
+              </div>
+            </div>
+
+            <div class="track-row" style="--track-color:var(--neon-green)">
+              <div class="track-label">
+                <strong>Full Compound</strong>
+                Reinvest 100% equity / exponential
+              </div>
+              <div class="track-value glow-green">
+                +9,863.84%
+                <small>$997,384.00 current value</small>
+              </div>
+            </div>
+
+            <div class="mini-chart-row" style="margin-top:8px">
+              <div class="mini-spark">
+                <div class="mini-spark-label">BTC/USDT · 1H</div>
+                <canvas id="sparkBTC"></canvas>
+              </div>
+              <div class="mini-spark">
+                <div class="mini-spark-label">WLD/USDT · 1H</div>
+                <canvas id="sparkWLD"></canvas>
+              </div>
+              <div class="mini-spark">
+                <div class="mini-spark-label">PEPE/USDT · 1H</div>
+                <canvas id="sparkPEPE"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dual line chart -->
+          <div class="returns-chart" style="background:rgba(0,0,0,0.2)">
+            <canvas id="returnsDualChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ BLOCK 2: LIQUIDITY SWEEP LATTICE ══ -->
+    <div class="panel" id="block-lattice">
+      <div class="panel-header">
+        <div class="panel-title">LIQUIDITY SWEEP LATTICE · PROBABILITY BIAS DISTRIBUTION</div>
+        <div class="panel-meta">
+          <span>1,666 TRADES · ONE LATTICE</span>
+          <span>|</span>
+          <span>SMC REBALANCE PULL-BACK DEVIATION</span>
+          <span>|</span>
+          <span>LIVE CONVERGENCE</span>
+        </div>
+      </div>
+      <div class="panel-body" style="padding:0;flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column">
+        <div class="lattice-grid">
+
+          <div class="lattice-stats">
+            <div style="font-size:8px;color:var(--text-dim);letter-spacing:0.15em;margin-bottom:4px">LIVE CONVERGENCE</div>
+            <div class="stat-row"><span class="stat-key">SWEEPS TOTAL</span><span class="stat-val">1,666</span></div>
+            <div class="stat-row"><span class="stat-key">LANDED LONG</span><span class="stat-val green">73.4%</span></div>
+            <div class="stat-row"><span class="stat-key">LANDED SHORT</span><span class="stat-val magenta">26.6%</span></div>
+            <div class="stat-row"><span class="stat-key">EV / TRADE</span><span class="stat-val green">+$142</span></div>
+            <div class="stat-row"><span class="stat-key">SESS P&amp;L</span><span class="stat-val green">+$23,814</span></div>
+            <div class="stat-row"><span class="stat-key">OB HIT RATE</span><span class="stat-val purple">68.2%</span></div>
+            <div class="stat-row"><span class="stat-key">FVG FILL %</span><span class="stat-val cyan">81.7%</span></div>
+            <div class="stat-row"><span class="stat-key">CHOCH CONF</span><span class="stat-val orange">74.5%</span></div>
+            <div class="stat-row"><span class="stat-key">BOS CONF</span><span class="stat-val green">88.1%</span></div>
+            <div class="stat-row"><span class="stat-key">ALL-TIME</span><span class="stat-val">1,666</span></div>
+            <div class="stat-row"><span class="stat-key">REALISED</span><span class="stat-val green">+$236,741</span></div>
+            <div style="margin-top:auto;padding-top:8px;font-size:8px;color:var(--text-muted);line-height:1.6">
+              LAW OF LARGE NUMBERS —<br/>THE EDGE ONLY NEEDS REPETITION
+            </div>
+          </div>
+
+          <div class="lattice-chart">
+            <canvas id="latticeChart" style="width:100%;flex:1;min-height:0"></canvas>
+          </div>
+
+          <div class="lattice-insight">
+            <div style="font-size:8px;color:var(--text-dim);letter-spacing:0.15em">LIVE GATE METRICS</div>
+
+            <div class="insight-block" style="--insight-color:var(--neon-green)">
+              <div class="insight-label">PROFIT ZONE BIAS</div>
+              <div class="insight-value glow-green">+73.4%</div>
+              <div class="insight-desc">Long-side structural bias</div>
+              <div class="prog-bar-wrap"><div class="prog-bar-fill" style="width:73.4%;background:var(--neon-green)"></div></div>
+            </div>
+
+            <div class="insight-block" style="--insight-color:var(--neon-purple)">
+              <div class="insight-label">OB IMBALANCE SCORE</div>
+              <div class="insight-value glow-purple">×2.74</div>
+              <div class="insight-desc">Bullish imbalance multiplier</div>
+              <div class="prog-bar-wrap"><div class="prog-bar-fill" style="width:68%;background:var(--neon-purple)"></div></div>
+            </div>
+
+            <div class="insight-block" style="--insight-color:var(--neon-orange)">
+              <div class="insight-label">LIQUIDITY VOID IDX</div>
+              <div class="insight-value glow-orange">0.847</div>
+              <div class="insight-desc">Cross-TF void density</div>
+              <div class="prog-bar-wrap"><div class="prog-bar-fill" style="width:84.7%;background:var(--neon-orange)"></div></div>
+            </div>
+
+            <div class="insight-block" style="--insight-color:var(--neon-magenta)">
+              <div class="insight-label">INDUCEMENT RATIO</div>
+              <div class="insight-value glow-magenta">3.12×</div>
+              <div class="insight-desc">Stop-hunt premium captured</div>
+              <div class="prog-bar-wrap"><div class="prog-bar-fill" style="width:78%;background:var(--neon-magenta)"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Block 3 (OB & ATR) removed for performance -->
+
+    <!-- ══ BLOCK 4: 3-TF RESONANCE ══ -->
+    <div class="panel" id="block-resonance">
+      <div class="panel-header">
+        <div class="panel-title">3-TF NEURAL RESONANCE CLUSTER · SIGNAL CONVERGENCE MAP</div>
+        <div class="panel-meta">
+          <span>1H TREND · 15M CHoCH · 5M ENTRY</span>
+          <span>|</span>
+          <span>NODES <span id="nodeCount" class="glow-cyan">09</span></span>
+          <span>|</span>
+          <span>EDGES <span id="edgeCount" class="glow-purple">13</span></span>
+          <span>|</span>
+          <span>SIGNAL <span id="signalStrength" class="glow-green">97.3%</span></span>
+          <span>|</span>
+          <span>ITER <span id="iterCount">0</span></span>
+        </div>
+      </div>
+      <div class="panel-body" style="padding:0;flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column">
+        <div class="resonance-grid">
+
+          <div class="resonance-controls">
+            <div style="font-size:8px;color:var(--text-dim);letter-spacing:0.15em">NODE CLASS</div>
+
+            <div class="tf-node-status">
+              <div class="tf-node-row">
+                <div class="tf-dot active" style="background:var(--neon-green);box-shadow:0 0 8px var(--neon-green)"></div>
+                <span class="tf-label">1H TREND</span>
+                <span class="tf-state glow-green" id="tf1State">BULL</span>
+              </div>
+              <div class="tf-node-row">
+                <div class="tf-dot active" style="background:var(--neon-purple);box-shadow:0 0 8px var(--neon-purple)"></div>
+                <span class="tf-label">15M CHoCH</span>
+                <span class="tf-state glow-purple" id="tf2State">CONF</span>
+              </div>
+              <div class="tf-node-row">
+                <div class="tf-dot" style="background:var(--neon-magenta);box-shadow:0 0 8px var(--neon-magenta)"></div>
+                <span class="tf-label">15M BOS</span>
+                <span class="tf-state glow-magenta" id="tf3State">SCAN</span>
+              </div>
+              <div class="tf-node-row">
+                <div class="tf-dot active" style="background:var(--neon-cyan);box-shadow:0 0 8px var(--neon-cyan)"></div>
+                <span class="tf-label">5M ENTRY</span>
+                <span class="tf-state glow-cyan" id="tf4State">ARMED</span>
+              </div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <div class="stat-row"><span class="stat-key">BEAR PATHS</span><span class="stat-val magenta">5,044</span></div>
+              <div class="stat-row"><span class="stat-key">BULL PATHS</span><span class="stat-val green">1,499</span></div>
+              <div class="stat-row"><span class="stat-key">PATHS SIM</span><span class="stat-val">2,025</span></div>
+              <div class="stat-row"><span class="stat-key">ITER / SEC</span><span class="stat-val cyan">251</span></div>
+            </div>
+
+            <div style="padding:6px 8px;border:1px solid var(--border);background:rgba(0,0,0,0.3);margin-top:auto">
+              <div style="font-size:8px;color:var(--text-dim);margin-bottom:4px">CONVERGENCE</div>
+              <div style="display:flex;gap:2px;flex-wrap:wrap" id="convergenceDots">
+              </div>
+              <div style="font-size:9px;color:var(--text-dim);margin-top:4px">PREDICTED <span id="predDir" class="glow-green">▲ UP</span></div>
+            </div>
+          </div>
+
+          <!-- Canvas resonance visualization -->
+          <div class="resonance-canvas-area" style="background:rgba(0,0,0,0.3)">
+            <canvas id="resonanceCanvas"></canvas>
+          </div>
+
+          <div class="resonance-signal">
+            <div class="signal-display signal-active" id="signalDisplay">
+              <div class="signal-label">RESONANCE SIGNAL</div>
+              <div class="signal-value glow-green" id="signalText">▲ LONG</div>
+              <div class="signal-desc" id="signalDesc">
+                3-TF ALIGNED · OB CONFIRMED<br/>
+                CHoCH @ 15M · BOS IMMINENT
+              </div>
+              <div class="confidence-bar">
+                <div class="confidence-fill" id="confFill" style="width:97%"></div>
+              </div>
+              <div style="font-size:9px;color:var(--neon-green);margin-top:6px" id="confValue">CONFIDENCE 97.3%</div>
+            </div>
+
+            <div style="width:100%">
+              <div style="font-size:8px;color:var(--text-dim);letter-spacing:0.12em;margin-bottom:6px">EDGE DISTRIBUTION · 24H</div>
+              <canvas id="edgeDistChart" style="width:100%;height:80px"></canvas>
+            </div>
+
+            <div style="font-size:9px;color:var(--text-dim);text-align:center;padding:6px;border:1px solid var(--border);background:rgba(0,0,0,0.3);width:100%">
+              <span style="color:var(--text-muted)">MEDIAN FAIR</span>
+              <span class="glow-green">+$75,059</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /dashboard-grid -->
+
+  <!-- ════════════════════════ STATUS BAR ════════════════════════ -->
+  <div class="status-bar">
+    <div class="status-bar-left">
+      <div class="status-item"><span class="status-key">AGENT</span><span class="status-val accent">● ONLINE</span></div>
+      <div class="status-item"><span class="status-key">MODEL</span><span class="status-val">STRATEGY-S · WATCHMAN-2.0</span></div>
+      <div class="status-item"><span class="status-key">EXCHANGE</span><span class="status-val">BITGET SANDBOX</span></div>
+      <div class="status-item"><span class="status-key">FILLS</span><span class="status-val">1,666</span></div>
+      <div class="status-item"><span class="status-key">BACKTEST</span><span class="status-val">BY 4Y 1D</span></div>
+      <div class="status-item"><span class="status-key">LATENCY</span><span class="status-val accent" id="latency">12MS</span></div>
+    </div>
+    <div class="status-bar-right">
+      <div class="status-item"><span class="status-key">STACK</span><span class="status-val">SMC-CORE · ANTI-GRAVITY-FORK</span></div>
+      <div class="status-item"><span class="status-key">BUILD</span><span class="status-val">v2.0.0-STABLE</span></div>
+    </div>
+  </div>
+
+</div><!-- /terminal-wrapper -->
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  LIVE METRICS API — fetchLiveMetrics()
+//  Reads ./metrics.json and auto-updates UI + charts
+//  Called on load + every 60s via setInterval
+// ═══════════════════════════════════════════════════════════
+let returnsDualChartRef = null; // will be set after chart init
+let latticeChartRef = null;
+
+async function fetchLiveMetrics() {
+  try {
+    const res = await fetch('./metrics.json', { cache: 'no-store' });
+    if (!res.ok) return; // silently skip if file doesn't exist yet
+    const data = await res.json();
+
+    // ── Update headline numbers ──
+    if (data.totalReturn !== undefined) {
+      const el = document.getElementById('totalReturn');
+      if (el) el.textContent = `+${Number(data.totalReturn).toFixed(2)}%`;
+    }
+    if (data.tradeCount !== undefined) {
+      const el = document.getElementById('tradeCount');
+      if (el) el.textContent = `${data.tradeCount} FILLS`;
+    }
+
+    // ── Update stat chips ──
+    if (data.winRate !== undefined) {
+      const chips = document.querySelectorAll('.stat-chip-value');
+      // chips[0]=trades, [1]=winrate, [2]=sharpe, [3]=maxdd
+      if (chips[1]) chips[1].textContent = `${Number(data.winRate).toFixed(2)}%`;
+    }
+    if (data.sharpe !== undefined) {
+      const chips = document.querySelectorAll('.stat-chip-value');
+      if (chips[2]) chips[2].textContent = Number(data.sharpe).toFixed(2);
+    }
+    if (data.maxDD !== undefined) {
+      const chips = document.querySelectorAll('.stat-chip-value');
+      if (chips[3]) chips[3].textContent = `−${Math.abs(data.maxDD).toFixed(1)}%`;
+    }
+
+    // ── Update returns dual chart ──
+    if (returnsDualChartRef && data.compoundSeries && data.fixedSeries) {
+      returnsDualChartRef.data.datasets[0].data = data.compoundSeries;
+      returnsDualChartRef.data.datasets[1].data = data.fixedSeries;
+      if (data.labels) returnsDualChartRef.data.labels = data.labels;
+      returnsDualChartRef.update('active');
+    }
+
+    // ── Update lattice bar chart ──
+    if (latticeChartRef && data.latticeDistribution) {
+      latticeChartRef.data.datasets[0].data = data.latticeDistribution;
+      latticeChartRef.update('active');
+    }
+
+    console.log(`[fetchLiveMetrics] ✓ ${new Date().toLocaleTimeString('zh-TW')} — data refreshed`);
+  } catch (err) {
+    // Silently ignore — server may not have metrics.json yet
+    // console.warn('[fetchLiveMetrics] No data:', err.message);
+  }
+}
+
+// ── Auto-refresh every 60 seconds ──
+window.addEventListener('load', () => {
+  fetchLiveMetrics();
+  setInterval(fetchLiveMetrics, 60000);
+});
+
+// ═══════════════════════════════════════════════════════════
+//  UTILITY
+// ═══════════════════════════════════════════════════════════
+const $ = id => document.getElementById(id);
+const lerp = (a, b, t) => a + (b - a) * t;
+const rand = (min, max) => Math.random() * (max - min) + min;
+const randInt = (min, max) => Math.floor(rand(min, max + 1));
+
+const NEON_GREEN = '#00FF87';
+const NEON_PURPLE = '#BF5FFF';
+const NEON_MAGENTA = '#FF2D78';
+const NEON_ORANGE = '#FF6B00';
+const NEON_CYAN = '#00D4FF';
+const NEON_YELLOW = '#FFE500';
+
+// ═══════════════════════════════════════════════════════════
+//  MATRIX RAIN BACKGROUND
+// ═══════════════════════════════════════════════════════════
+(function initMatrix() {
+  if (window.innerWidth < 768) return; // skip on mobile for performance
+  const canvas = $('matrixCanvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, cols, drops;
+  const chars = '01アイウエオSMCOBFVGBOSCHoCH+-×÷↑↓◆◇▲▼';
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+    cols = Math.floor(W / 14);
+    drops = new Array(cols).fill(1);
+  }
+
+  resize();
+  window.addEventListener('resize', resize);
+
+  function drawMatrix() {
+    ctx.fillStyle = 'rgba(5,7,11,0.05)';
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#00FF87';
+    ctx.font = '11px Share Tech Mono';
+    drops.forEach((y, i) => {
+      const char = chars[Math.floor(Math.random() * chars.length)];
+      ctx.fillText(char, i * 14, y * 14);
+      if (y * 14 > H && Math.random() > 0.975) drops[i] = 0;
+      drops[i]++;
+    });
+  }
+
+  setInterval(drawMatrix, 50);
+})();
+
+// ═══════════════════════════════════════════════════════════
+//  UTC CLOCK
+// ═══════════════════════════════════════════════════════════
+function updateClock() {
+  const now = new Date();
+  // UTC+8 Taiwan time
+  const utc8 = new Date(now.getTime() + 8 * 3600 * 1000);
+  const h = String(utc8.getUTCHours()).padStart(2, '0');
+  const m = String(utc8.getUTCMinutes()).padStart(2, '0');
+  const s = String(utc8.getUTCSeconds()).padStart(2, '0');
+  $('utcClock').textContent = `${h}:${m}:${s} UTC+8`;
+
+  // Simulate latency fluctuation
+  const lat = randInt(8, 24);
+  $('latency').textContent = `${lat}MS`;
+  $('latency').style.color = lat < 15 ? NEON_GREEN : NEON_ORANGE;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ═══════════════════════════════════════════════════════════
+//  TICKER TAPE
+// ═══════════════════════════════════════════════════════════
+const tickers = [
+  { sym: 'BTC/USDT', val: '+2.34%', dir: 1 }, { sym: 'ETH/USDT', val: '+1.87%', dir: 1 },
+  { sym: 'WLD/USDT', val: '+8.21%', dir: 1 }, { sym: 'PEPE/USDT', val: '+14.76%', dir: 1 },
+  { sym: 'SOL/USDT', val: '+3.45%', dir: 1 }, { sym: 'ARB/USDT', val: '-1.23%', dir: -1 },
+  { sym: 'OP/USDT', val: '+5.67%', dir: 1 }, { sym: 'DOGE/USDT', val: '-0.82%', dir: -1 },
+  { sym: 'AVAX/USDT', val: '+2.91%', dir: 1 }, { sym: 'LINK/USDT', val: '+4.12%', dir: 1 },
+  { sym: 'INJ/USDT', val: '+11.44%', dir: 1 }, { sym: 'TIA/USDT', val: '-2.14%', dir: -1 },
+];
+const tickerEl = $('tickerInner');
+let tickerHTML = '';
+[...tickers, ...tickers].forEach(t => {
+  const cls = t.dir > 0 ? 'pos' : 'neg';
+  tickerHTML += `<span class="ticker-item"><span class="sym">${t.sym}</span><span class="${cls}">${t.val}</span></span>`;
+});
+tickerEl.innerHTML = tickerHTML;
+
+// ═══════════════════════════════════════════════════════════
+//  CHART.JS GLOBAL DEFAULTS
+// ═══════════════════════════════════════════════════════════
+Chart.defaults.color = '#64748B';
+Chart.defaults.borderColor = 'rgba(148,163,184,0.08)';
+Chart.defaults.font.family = "'Share Tech Mono', monospace";
+Chart.defaults.font.size = 9;
+
+// ═══════════════════════════════════════════════════════════
+//  BLOCK 1: DUAL RETURNS CHART
+// ═══════════════════════════════════════════════════════════
+(function initReturnsChart() {
+  const labels = [];
+  const fixed = [];
+  const compound = [];
+  let f = 100, c = 100;
+  for (let i = 0; i <= 120; i++) {
+    labels.push(i === 0 ? 'Start' : i % 10 === 0 ? `${i*14}D` : '');
+    const gain = 1 + rand(0.01, 0.05);
+    const loss = 1 - rand(0, 0.015);
+    const move = i % 7 === 0 ? loss : gain;
+    f *= move * 0.3 + 0.7;
+    c *= move;
+    fixed.push(Math.max(100, f));
+    compound.push(Math.max(100, c));
+  }
+
+  const ctx = $('returnsDualChart').getContext('2d');
+
+  const greenGrad = ctx.createLinearGradient(0, 0, 0, 200);
+  greenGrad.addColorStop(0, 'rgba(0,255,135,0.15)');
+  greenGrad.addColorStop(1, 'rgba(0,255,135,0)');
+
+  const cyanGrad = ctx.createLinearGradient(0, 0, 0, 200);
+  cyanGrad.addColorStop(0, 'rgba(0,212,255,0.1)');
+  cyanGrad.addColorStop(1, 'rgba(0,212,255,0)');
+
+  returnsDualChartRef = new Chart(ctx, {
+          data: compound,
+          borderColor: NEON_GREEN,
+          borderWidth: 2,
+          backgroundColor: greenGrad,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+        },
+        {
+          label: 'Fixed Principal',
+          data: fixed,
+          borderColor: NEON_CYAN,
+          borderWidth: 2,
+          backgroundColor: cyanGrad,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 1200, easing: 'easeInOutQuart' },
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(5,7,11,0.95)',
+          borderColor: 'rgba(0,255,135,0.3)',
+          borderWidth: 1,
+          titleColor: NEON_GREEN,
+          bodyColor: '#94A3B8',
+          callbacks: {
+            label: (ctx) => ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}%`
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(148,163,184,0.05)' },
+          ticks: { maxRotation: 0, maxTicksLimit: 6 }
+        },
+        y: {
+          grid: { color: 'rgba(148,163,184,0.05)' },
+          ticks: { callback: v => v.toFixed(0) + '%' },
+          position: 'right'
+        }
+      }
+    }
+  });
+})();
+
+// ═══════════════════════════════════════════════════════════
+//  MINI SPARKLINES
+// ═══════════════════════════════════════════════════════════
+function initSparkline(id, color, seed) {
+  const data = [];
+  let v = 100 + seed;
+  for (let i = 0; i < 30; i++) {
+    v += rand(-3, 4);
+    data.push(v);
+  }
+  const ctx = $(id).getContext('2d');
+  const grad = ctx.createLinearGradient(0, 0, 0, 32);
+  grad.addColorStop(0, color + '40');
+  grad.addColorStop(1, color + '00');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: data.map((_, i) => i),
+      datasets: [{ data, borderColor: color, borderWidth: 2.5, backgroundColor: grad, fill: true, tension: 0.4, pointRadius: 0 }]
+    },
+    options: {
+      responsive: false,
+      animation: false,
+      plugins: { legend: { display: false }, tooltip: { enabled: false } },
+      scales: { x: { display: false }, y: { display: false } }
+    }
+  });
+}
+initSparkline('sparkBTC', NEON_GREEN, 20);
+initSparkline('sparkWLD', NEON_PURPLE, -5);
+initSparkline('sparkPEPE', NEON_ORANGE, 10);
+
+// ═══════════════════════════════════════════════════════════
+//  BLOCK 2: LATTICE BAR CHART
+// ═══════════════════════════════════════════════════════════
+(function initLatticeChart() {
+  const bins = ['-4σ', '-3σ', '-2σ', '-1σ', '0', '+1σ', '+2σ', '+3σ', '+4σ'];
+  // Probability bias toward positive (long-side)
+  const barData = [4, 18, 48, 120, 340, 520, 390, 168, 58];
+  const colors = barData.map((v, i) => {
+    const t = i / (bins.length - 1);
+    if (i < 3) return NEON_MAGENTA + 'CC';
+    if (i === 4) return NEON_YELLOW + 'CC';
+    return NEON_GREEN + 'CC';
+  });
+  const borderColors = barData.map((v, i) => {
+    if (i < 3) return NEON_MAGENTA;
+    if (i === 4) return NEON_YELLOW;
+    return NEON_GREEN;
+  });
+
+  const ctx = $('latticeChart').getContext('2d');
+  latticeChartRef = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: bins,
+      datasets: [{
+        label: 'Trade Density',
+        data: barData,
+        backgroundColor: colors,
+        borderColor: borderColors,
+        borderWidth: 1,
+        borderRadius: 2,
+        hoverBackgroundColor: colors.map(c => c.slice(0, 7) + 'FF'),
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 1400, easing: 'easeOutBounce' },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(5,7,11,0.95)',
+          borderColor: 'rgba(191,95,255,0.3)',
+          borderWidth: 1,
+          titleColor: NEON_PURPLE,
+          bodyColor: '#94A3B8',
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(148,163,184,0.05)' },
+          ticks: { color: '#64748B', font: { size: 9 } }
+        },
+        y: {
+          grid: { color: 'rgba(148,163,184,0.05)' },
+          ticks: { color: '#64748B', font: { size: 9 } }
+        }
+      }
+    }
+  });
+})();
+
+// ═══════════════════════════════════════════════════════════
+//  BLOCK 3: OB AREA CHART
+// ═══════════════════════════════════════════════════════════
+(function initOBCharts() {
+  // Wave terrain area chart
+  
+  // 剛性防死安全鎖：如果連這個函數都找不到核心元素，直接 return 跳出，絕對不准卡死後面的動畫！
+  if (!document.getElementById('obChart') && !document.getElementById('orderBookChart')) {
+       console.warn("[WARN] 找不到 OB 圖表節點，已自動跳過，保護後端動畫運作。");
+       return;
+  }
+    
+  const len = 80;
+  const xLabels = Array.from({ length: len }, (_, i) => i % 10 === 0 ? `-${(80 - i) * 15}M` : '');
+
+  function genWave(base, amp, noiseAmp, seed) {
+    return Array.from({ length: len }, (_, i) => {
+      const noise = (Math.sin(i * 3.7 + seed * 5.1) + Math.cos(i * 2.3 + seed * 3.7)) * noiseAmp * 0.5;
+      return base + Math.sin(i * 0.18 + seed) * amp + Math.cos(i * 0.11 + seed * 0.5) * amp * 0.4 + noise;
+    });
+  }
+
+  const grad1 = ctx1.createLinearGradient(0, 0, 0, 210);
+  grad1.addColorStop(0, 'rgba(191,95,255,0.35)');
+  grad1.addColorStop(1, 'rgba(191,95,255,0.02)');
+
+  const grad2 = ctx1.createLinearGradient(0, 0, 0, 210);
+  grad2.addColorStop(0, 'rgba(255,45,120,0.25)');
+  grad2.addColorStop(1, 'rgba(255,45,120,0.02)');
+
+  const grad3 = ctx1.createLinearGradient(0, 0, 0, 210);
+  grad3.addColorStop(0, 'rgba(0,255,135,0.2)');
+  grad3.addColorStop(1, 'rgba(0,255,135,0.01)');
+
+  new Chart(ctx1, {
+    type: 'line',
+    data: {
+      labels: xLabels,
+      datasets: [
+        { label: 'WLD OB', data: genWave(60, 25, 8, 0), borderColor: NEON_PURPLE, borderWidth: 1.5, backgroundColor: grad1, fill: true, tension: 0.5, pointRadius: 0 },
+        { label: 'PEPE OB', data: genWave(40, 18, 12, 2), borderColor: NEON_MAGENTA, borderWidth: 1.5, backgroundColor: grad2, fill: true, tension: 0.5, pointRadius: 0 },
+        { label: 'BTC OB', data: genWave(30, 12, 6, 4), borderColor: NEON_GREEN, borderWidth: 1.5, backgroundColor: grad3, fill: true, tension: 0.5, pointRadius: 0 },
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 1600, easing: 'easeInOutSine' },
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          align: 'end',
+          labels: { color: '#64748B', boxWidth: 8, padding: 8, font: { size: 8 } }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(5,7,11,0.95)',
+          borderColor: 'rgba(255,45,120,0.3)',
+          borderWidth: 1,
+        }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(148,163,184,0.04)' } },
+        y: { grid: { color: 'rgba(148,163,184,0.04)' }, display: false }
+      }
+    }
+  });
+
+  // Radar chart
+  const ctx2 = $('obRadarChart').getContext('2d');
+  const radarGrad = ctx2.createRadialGradient(130, 130, 0, 130, 130, 130);
+  radarGrad.addColorStop(0, 'rgba(255,45,120,0.15)');
+  radarGrad.addColorStop(1, 'rgba(191,95,255,0.04)');
+
+  new Chart(ctx2, {
+    type: 'radar',
+    data: {
+      labels: ['1H OB', '15M CHoCH', '5M BOS', 'FVG', 'ATR', 'Volume', 'Sweep'],
+      datasets: [
+        {
+          label: 'WLD',
+          data: [88, 75, 92, 68, 84, 71, 90],
+          borderColor: NEON_PURPLE,
+          backgroundColor: 'rgba(191,95,255,0.12)',
+          borderWidth: 1.5,
+          pointBackgroundColor: NEON_PURPLE,
+          pointRadius: 3,
+        },
+        {
+          label: 'PEPE',
+          data: [72, 88, 65, 91, 78, 85, 68],
+          borderColor: NEON_MAGENTA,
+          backgroundColor: 'rgba(255,45,120,0.1)',
+          borderWidth: 1.5,
+          pointBackgroundColor: NEON_MAGENTA,
+          pointRadius: 3,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 1200 },
+      plugins: {
+        legend: { display: true, position: 'top', align: 'end', labels: { color: '#64748B', boxWidth: 8, padding: 6, font: { size: 8 } } }
+      },
+      scales: {
+        r: {
+          grid: { color: 'rgba(148,163,184,0.08)' },
+          angleLines: { color: 'rgba(148,163,184,0.08)' },
+          pointLabels: { color: '#64748B', font: { size: 8 } },
+          ticks: { display: false },
+          min: 0, max: 100,
+        }
+      }
+    }
+  });
+})();
+
+// ═══════════════════════════════════════════════════════════
+//  BLOCK 4: 3-TF RESONANCE CANVAS (desktop only)
+// ═══════════════════════════════════════════════════════════
+(function initResonance() {
+  // Skip canvas animation on mobile — prevents heat & browser lag
+  if (window.innerWidth < 768) return;
+  const canvas = $('resonanceCanvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, iter = 0;
+
+  function resize() {
+    const parent = canvas.parentElement;
+    const w = parent.offsetWidth || parent.clientWidth || 0;
+    const h = parent.offsetHeight || parent.clientHeight || 0;
+    W = canvas.width = w > 0 ? w : 400;
+    H = canvas.height = h > 0 ? h : 200;
+  }
+
+  // Defer init until after first paint so parent has dimensions
+  function init() {
+    resize();
+    if (W < 10 || H < 10) {
+      // Still not ready — retry on next frame
+      requestAnimationFrame(init);
+      return;
+    }
+    buildNodes();
+    animate();
+  }
+
+  // Node definitions — 3 clusters
+  const clusterDefs = [
+    { label: '1H_TREND', x: 0.20, y: 0.5, color: NEON_GREEN, nodes: 3, radius: 55 },
+    { label: '15M_CHoCH', x: 0.5, y: 0.5, color: NEON_PURPLE, nodes: 4, radius: 50 },
+    { label: '5M_ENTRY', x: 0.80, y: 0.5, color: NEON_CYAN, nodes: 3, radius: 48 },
+  ];
+
+  class Node {
+    constructor(cx, cy, r, color) {
+      this.baseX = cx + (Math.random() - 0.5) * r * 2;
+      this.baseY = cy + (Math.random() - 0.5) * r * 2;
+      this.x = this.baseX; this.y = this.baseY;
+      this.color = color;
+      this.size = rand(3, 6);
+      this.vx = rand(-0.3, 0.3);
+      this.vy = rand(-0.3, 0.3);
+      this.pulsePhase = Math.random() * Math.PI * 2;
+      this.active = Math.random() > 0.2;
+    }
+
+    update(t) {
+      this.x = this.baseX + Math.sin(t * 0.5 + this.pulsePhase) * 6;
+      this.y = this.baseY + Math.cos(t * 0.7 + this.pulsePhase) * 4;
+      const pulse = 0.5 + 0.5 * Math.sin(t * 2 + this.pulsePhase);
+      this.currentSize = this.size * (0.8 + 0.4 * pulse);
+      this.alpha = this.active ? (0.6 + 0.4 * pulse) : 0.2;
+    }
+
+    draw(ctx) {
+      // Glow
+      const grd = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.currentSize * 4);
+      grd.addColorStop(0, this.color + Math.floor(this.alpha * 80).toString(16).padStart(2,'0'));
+      grd.addColorStop(1, this.color + '00');
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.currentSize * 4, 0, Math.PI * 2);
+      ctx.fillStyle = grd;
+      ctx.fill();
+
+      // Core
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.currentSize, 0, Math.PI * 2);
+      ctx.fillStyle = this.color;
+      ctx.globalAlpha = this.alpha;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  let nodes = [];
+  function buildNodes() {
+    nodes = [];
+    clusterDefs.forEach(cl => {
+      const cx = cl.x * W, cy = cl.y * H;
+      for (let i = 0; i < cl.nodes; i++) {
+        const n = new Node(cx, cy, cl.radius, cl.color);
+        n.cluster = cl.label;
+        n.clusterColor = cl.color;
+        nodes.push(n);
+      }
+    });
+  }
+
+  // Determine "resonance" active pairs (cross-cluster connections)
+  function getCrossEdges(t) {
+    const edges = [];
+    const clusters = [...new Set(nodes.map(n => n.cluster))];
+    for (let a = 0; a < clusters.length; a++) {
+      for (let b = a + 1; b < clusters.length; b++) {
+        const nodesA = nodes.filter(n => n.cluster === clusters[a]);
+        const nodesB = nodes.filter(n => n.cluster === clusters[b]);
+        // Pick best (closest) pair
+        let best = null, bestDist = 1e9;
+        nodesA.forEach(na => nodesB.forEach(nb => {
+          const d = Math.hypot(na.x - nb.x, na.y - nb.y);
+          if (d < bestDist) { bestDist = d; best = [na, nb]; }
+        }));
+        if (best) {
+          const resonating = (Math.sin(t * 0.8 + a + b) > 0.3);
+          edges.push({ a: best[0], b: best[1], resonating });
+        }
+      }
+    }
+    return edges;
+  }
+
+  function drawClusterLabel(ctx, cl) {
+    const cx = cl.x * W, cy = cl.y * H;
+    ctx.font = `bold 8px 'Share Tech Mono'`;
+    ctx.fillStyle = cl.color;
+    ctx.globalAlpha = 0.7;
+    ctx.textAlign = 'center';
+    ctx.fillText(cl.label, cx, cy + cl.radius + 20);
+    ctx.globalAlpha = 1;
+
+    // Cluster boundary circle
+    ctx.beginPath();
+    ctx.arc(cx, cy, cl.radius + 8, 0, Math.PI * 2);
+    ctx.strokeStyle = cl.color + '22';
+    ctx.lineWidth = 0.5;
+    ctx.setLineDash([4, 6]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  let resonanceActive = false;
+  let t = 0;
+
+  function animate() {
+    if (!W || !H) { requestAnimationFrame(animate); return; }
+    ctx.clearRect(0, 0, W, H);
+
+    // Background grid
+    ctx.strokeStyle = 'rgba(148,163,184,0.04)';
+    ctx.lineWidth = 0.5;
+    for (let gx = 0; gx < W; gx += 40) {
+      ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, H); ctx.stroke();
+    }
+    for (let gy = 0; gy < H; gy += 40) {
+      ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke();
+    }
+
+    t += 0.016;
+    iter++;
+    if (iter % 10 === 0) $('iterCount').textContent = iter;
+
+    const edges = getCrossEdges(t);
+    let anyResonating = edges.some(e => e.resonating);
+
+    // Draw intra-cluster edges
+    const clusterGroups = {};
+    nodes.forEach(n => { (clusterGroups[n.cluster] = clusterGroups[n.cluster] || []).push(n); });
+    Object.values(clusterGroups).forEach(group => {
+      for (let i = 0; i < group.length; i++) {
+        for (let j = i + 1; j < group.length; j++) {
+          const na = group[i], nb = group[j];
+          const pulse = 0.5 + 0.5 * Math.sin(t * 1.5 + i + j);
+          ctx.beginPath();
+          ctx.moveTo(na.x, na.y);
+          ctx.lineTo(nb.x, nb.y);
+          ctx.strokeStyle = na.clusterColor + Math.floor(pulse * 50).toString(16).padStart(2,'0');
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    });
+
+    // Draw cross-cluster edges
+    edges.forEach(edge => {
+      ctx.beginPath();
+      ctx.moveTo(edge.a.x, edge.a.y);
+      ctx.lineTo(edge.b.x, edge.b.y);
+      if (edge.resonating) {
+        const progress = (Math.sin(t * 3) + 1) / 2;
+        const grd = ctx.createLinearGradient(edge.a.x, edge.a.y, edge.b.x, edge.b.y);
+        grd.addColorStop(0, edge.a.clusterColor);
+        grd.addColorStop(1, edge.b.clusterColor);
+        ctx.strokeStyle = grd;
+        ctx.lineWidth = 1.5 + progress;
+        ctx.globalAlpha = 0.6 + 0.4 * progress;
+        ctx.setLineDash([8, 3]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.globalAlpha = 1;
+
+        // Animated packet traveling the edge
+        const px = lerp(edge.a.x, edge.b.x, (t * 0.5) % 1);
+        const py = lerp(edge.a.y, edge.b.y, (t * 0.5) % 1);
+        ctx.beginPath();
+        ctx.arc(px, py, 3, 0, Math.PI * 2);
+        ctx.fillStyle = NEON_GREEN;
+        ctx.globalAlpha = 0.9;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      } else {
+        ctx.strokeStyle = 'rgba(148,163,184,0.12)';
+        ctx.lineWidth = 0.6;
+        ctx.setLineDash([4, 8]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    });
+
+    // Update & draw nodes
+    nodes.forEach(n => { n.update(t); n.draw(ctx); });
+
+    // Draw labels
+    clusterDefs.forEach(cl => { if (W && H) drawClusterLabel(ctx, cl); });
+
+    // Resonance signal overlay
+    if (anyResonating !== resonanceActive) {
+      resonanceActive = anyResonating;
+      updateSignalDisplay(resonanceActive);
+    }
+
+    // Central resonance indicator
+    if (anyResonating) {
+      const cx = W / 2, cy = H / 2;
+      const r = 18 + Math.sin(t * 4) * 4;
+      const grd = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 2);
+      grd.addColorStop(0, 'rgba(0,255,135,0.4)');
+      grd.addColorStop(1, 'rgba(0,255,135,0)');
+      ctx.beginPath();
+      ctx.arc(cx, cy, r * 2, 0, Math.PI * 2);
+      ctx.fillStyle = grd;
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.strokeStyle = NEON_GREEN;
+      ctx.lineWidth = 1.5;
+      ctx.globalAlpha = 0.8;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+
+      ctx.font = "bold 7px 'Orbitron'";
+      ctx.fillStyle = NEON_GREEN;
+      ctx.textAlign = 'center';
+      ctx.fillText('SIGNAL', cx, cy + 2);
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  requestAnimationFrame(init);
+  window.addEventListener('resize', () => { setTimeout(() => { resize(); buildNodes(); }, 150); });
+
+  function updateSignalDisplay(active) {
+    const disp = $('signalDisplay');
+    const text = $('signalText');
+    const desc = $('signalDesc');
+    const fill = $('confFill');
+    const conf = $('confValue');
+
+    if (active) {
+      disp.classList.add('signal-active');
+      text.textContent = '▲ LONG';
+      text.style.color = NEON_GREEN;
+      desc.innerHTML = '3-TF ALIGNED · OB CONFIRMED<br/>CHoCH @ 15M · BOS IMMINENT';
+      fill.style.width = '97%';
+      conf.textContent = 'CONFIDENCE 97.3%';
+      conf.style.color = NEON_GREEN;
+    } else {
+      disp.classList.remove('signal-active');
+      text.textContent = '◌ SCANNING';
+      text.style.color = '#64748B';
+      desc.innerHTML = 'AWAITING 3-TF CONVERGENCE<br/>MONITORING STRUCTURE…';
+      fill.style.width = '42%';
+      conf.textContent = 'CONFIDENCE 42.0%';
+      conf.style.color = '#64748B';
+    }
+  }
+})();
+
+// ═══════════════════════════════════════════════════════════
+//  EDGE DISTRIBUTION MINI CHART
+// ═══════════════════════════════════════════════════════════
+(function initEdgeDist() {
+  const data = [12, 8, 18, 24, 42, 38, 52, 47, 63, 55, 71, 48];
+  const colors = data.map((v, i) => i < 4 ? NEON_MAGENTA + '99' : NEON_GREEN + '99');
+  const ctx = $('edgeDistChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: data.map((_, i) => ''),
+      datasets: [{
+        data,
+        backgroundColor: colors,
+        borderColor: colors.map(c => c.slice(0, 7)),
+        borderWidth: 1,
+        borderRadius: 1,
+      }]
+    },
+    options: {
+      responsive: false,
+      animation: { duration: 800 },
+      plugins: { legend: { display: false }, tooltip: { enabled: false } },
+      scales: { x: { display: false }, y: { display: false } }
+    }
+  });
+})();
+
+// ═══════════════════════════════════════════════════════════
+//  CONVERGENCE DOTS ANIMATION
+// ═══════════════════════════════════════════════════════════
+(function initConvergenceDots() {
+  const container = $('convergenceDots');
+  const total = 20;
+  let filled = 14;
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement('div');
+    d.style.cssText = `width:7px;height:7px;border-radius:1px;margin:1px;transition:background 0.3s;`;
+    d.style.background = i < filled ? NEON_GREEN : 'rgba(255,255,255,0.05)';
+    if (i < filled) d.style.boxShadow = `0 0 4px rgba(0,255,135,0.5)`;
+    container.appendChild(d);
+  }
+
+  setInterval(() => {
+    const change = randInt(-2, 2);
+    filled = Math.min(total, Math.max(8, filled + change));
+    const dots = container.querySelectorAll('div');
+    dots.forEach((d, i) => {
+      d.style.background = i < filled ? NEON_GREEN : 'rgba(255,255,255,0.05)';
+      d.style.boxShadow = i < filled ? '0 0 4px rgba(0,255,135,0.5)' : 'none';
+    });
+    const pct = Math.round((filled / total) * 100);
+    $('signalStrength').textContent = pct + '%';
+  }, 2000);
+})();
+
+// ═══════════════════════════════════════════════════════════
+//  LIVE DATA SIMULATION (subtle fluctuations)
+// ═══════════════════════════════════════════════════════════
+(function liveFlicker() {
+  const states = ['BULL', 'BULL+', 'CONF', 'ARMED'];
+  const tf1States = ['BULL', 'BULL+', 'RANGE'];
+  const tf3States = ['SCAN', 'CONF', 'BOS'];
+
+  setInterval(() => {
+    $('tf1State').textContent = tf1States[randInt(0, 1)];
+    if (Math.random() > 0.6) $('tf3State').textContent = tf3States[randInt(0, 2)];
+  }, 3000);
+
+  // Animate total return counter
+  let current = 4170.14;
+  setInterval(() => {
+    current += rand(-0.5, 2.1);
+    if (current < 4160) current = 4170;
+    $('totalReturn').textContent = `+${current.toFixed(2)}%`;
+  }, 5000);
+
+  // Edge / node counters
+  setInterval(() => {
+    $('nodeCount').textContent = String(randInt(7, 12)).padStart(2, '0');
+    $('edgeCount').textContent = String(randInt(10, 18)).padStart(2, '0');
+  }, 2500);
+})();
+
+</script>
+</body>
+</html>
