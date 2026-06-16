@@ -34,7 +34,7 @@
     --font-display: 'Orbitron', monospace;
   }
 
-  html { scroll-behavior: smooth; height: 100%; }
+  html { scroll-behavior: smooth; height: 100%; overflow: hidden; }
 
   body {
     background: var(--bg-void);
@@ -42,6 +42,8 @@
     font-family: var(--font-mono);
     font-size: 12px;
     line-height: 1.4;
+    height: 100vh;
+    overflow: hidden;
     -webkit-font-smoothing: antialiased;
   }
 
@@ -71,32 +73,21 @@
     z-index: 9998;
   }
 
-  /* ── TERMINAL WRAPPER: desktop = 100vh locked, mobile = scroll ── */
   .terminal-wrapper {
     width: 100%;
+    height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+    padding: 0 60px;
     position: relative;
     z-index: 1;
-    padding: 0 16px; /* mobile: snug padding */
-  }
-
-  @media (min-width: 768px) {
-    html { overflow: hidden; }
-    body { height: 100vh; overflow: hidden; }
-    .terminal-wrapper {
-      height: 100vh;
-      overflow: hidden;
-      padding: 0 60px; /* desktop: luxurious breathing room */
-    }
   }
   .header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 6px;
-    padding: 8px 0;
+    padding: 6px 0;
     background: linear-gradient(90deg, rgba(0,255,135,0.04) 0%, transparent 40%, transparent 60%, rgba(0,212,255,0.04) 100%);
     border-bottom: 1px solid var(--border-bright);
     flex-shrink: 0;
@@ -116,7 +107,7 @@
   }
 
   .logo-icon {
-    width: 34px; height: 34px;
+    width: 28px; height: 28px;
     border: 1px solid var(--neon-green);
     display: flex; align-items: center; justify-content: center;
     box-shadow: var(--neon-green-glow);
@@ -139,7 +130,7 @@
 
   .header-title {
     font-family: var(--font-display);
-    font-size: 19px;
+    font-size: 15px;
     font-weight: 700;
     color: var(--text-primary);
     letter-spacing: 0.15em;
@@ -153,16 +144,15 @@
   .header-subtitle {
     font-size: 11px;
     color: var(--text-dim);
-    letter-spacing: 0.18em;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
     margin-top: 2px;
   }
 
   .header-center {
     display: flex;
-    gap: 10px;
+    gap: 16px;
     align-items: center;
-    flex-wrap: wrap;
   }
 
   .stat-chip {
@@ -170,13 +160,13 @@
     flex-direction: column;
     align-items: center;
     gap: 2px;
-    padding: 5px 14px;
+    padding: 4px 12px;
     border: 1px solid var(--border);
     background: rgba(255,255,255,0.02);
   }
 
-  .stat-chip-label { font-size: 13px; color: var(--text-dim); letter-spacing: 0.12em; text-transform: uppercase; }
-  .stat-chip-value { font-size: 20px; font-family: var(--font-display); color: var(--neon-green); text-shadow: var(--neon-green-glow); }
+  .stat-chip-label { font-size: 10px; color: var(--text-dim); letter-spacing: 0.15em; text-transform: uppercase; }
+  .stat-chip-value { font-size: 16px; font-family: var(--font-display); color: var(--neon-green); text-shadow: var(--neon-green-glow); }
 
   .header-right {
     display: flex;
@@ -188,10 +178,10 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 6px 14px;
+    padding: 6px 12px;
     border: 1px solid rgba(0,255,135,0.4);
     background: rgba(0,255,135,0.06);
-    font-size: 15px;
+    font-size: 12px;
     letter-spacing: 0.12em;
     color: var(--neon-green);
     text-shadow: var(--neon-green-glow);
@@ -213,7 +203,7 @@
 
   .utc-clock {
     font-family: var(--font-display);
-    font-size: 17px;
+    font-size: 14px;
     color: var(--text-dim);
     letter-spacing: 0.1em;
   }
@@ -255,26 +245,17 @@
   .ticker-item .pos { color: var(--neon-green); text-shadow: 0 0 8px rgba(0,255,135,0.6); }
   .ticker-item .neg { color: var(--neon-magenta); text-shadow: 0 0 8px rgba(255,45,120,0.6); }
 
-  /* ── DASHBOARD GRID ── */
+  /* ══════════════════════════════════════
+     GRID LAYOUT
+  ══════════════════════════════════════ */
   .dashboard-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-top: 8px;
-    padding-bottom: 16px;
-  }
-
-  @media (min-width: 768px) {
-    .dashboard-grid {
-      display: grid;
-      gap: 6px;
-      margin-top: 6px;
-      padding-bottom: 0;
-      flex: 1;
-      overflow: hidden;
-      min-height: 0;
-      grid-template-rows: 1fr 1fr 1fr;
-    }
+    display: grid;
+    gap: 6px;
+    margin-top: 6px;
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+    grid-template-rows: 1fr 1fr 1fr;
   }
 
   .panel {
@@ -284,11 +265,7 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    min-height: 260px; /* mobile: enough to show content */
-  }
-
-  @media (min-width: 768px) {
-    .panel { min-height: 0; } /* desktop: grid controls height */
+    min-height: 0;
   }
 
   .panel::before {
@@ -351,16 +328,10 @@
 
   .returns-grid {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr 280px;
     gap: 0;
     flex: 1;
     min-height: 0;
-  }
-
-  @media (min-width: 768px) {
-    .returns-grid {
-      grid-template-columns: 1fr 1fr 280px;
-    }
   }
 
   .returns-main {
@@ -497,16 +468,10 @@
 
   .lattice-grid {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 3fr 1fr;
     gap: 0;
     flex: 1;
     min-height: 0;
-  }
-
-  @media (min-width: 768px) {
-    .lattice-grid {
-      grid-template-columns: 1fr 3fr 1fr;
-    }
   }
 
   .lattice-grid > div {
@@ -533,8 +498,8 @@
   }
 
   .stat-row:last-child { border-bottom: none; }
-  .stat-key { font-size: 13px; color: var(--text-dim); letter-spacing: 0.08em; text-transform: uppercase; }
-  .stat-val { font-size: 15px; color: var(--text-primary); font-family: var(--font-mono); }
+  .stat-key { font-size: 11px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; }
+  .stat-val { font-size: 13px; color: var(--text-primary); font-family: var(--font-mono); }
   .stat-val.green { color: var(--neon-green); text-shadow: 0 0 8px rgba(0,255,135,0.5); }
   .stat-val.purple { color: var(--neon-purple); text-shadow: 0 0 8px rgba(191,95,255,0.5); }
   .stat-val.orange { color: var(--neon-orange); text-shadow: 0 0 8px rgba(255,107,0,0.5); }
@@ -574,9 +539,9 @@
     opacity: 0.5;
   }
 
-  .insight-label { font-size: 13px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 1px; }
-  .insight-value { font-family: var(--font-display); font-size: 20px; }
-  .insight-desc { font-size: 12px; color: var(--text-dim); margin-top: 1px; }
+  .insight-label { font-size: 10px; color: var(--text-dim); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 1px; }
+  .insight-value { font-family: var(--font-display); font-size: 16px; }
+  .insight-desc { font-size: 10px; color: var(--text-dim); margin-top: 1px; }
 
   /* Block 3 removed — OB & ATR module retired for performance */
 
@@ -589,31 +554,25 @@
 
   .resonance-grid {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: 200px 1fr 220px;
     gap: 0;
     flex: 1;
     min-height: 0;
   }
 
-  @media (min-width: 768px) {
-    .resonance-grid {
-      grid-template-columns: 200px 1fr 220px;
-    }
-  }
-
-  /* Hide canvas animation on mobile — prevent heat + lag */
-  .resonance-canvas-area {
-    display: none;
-    position: relative;
-    align-items: stretch;
-    justify-content: center;
-    overflow: hidden;
+  .resonance-grid > div {
+    display: flex;
+    flex-direction: column;
     min-height: 0;
-    flex: 1;
+    overflow: hidden;
   }
 
-  @media (min-width: 768px) {
-    .resonance-canvas-area { display: flex; }
+  .resonance-controls {
+    padding: 8px 10px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
   }
 
   .tf-node-status {
@@ -659,21 +618,6 @@
     overflow: hidden;
     min-height: 0;
     flex: 1;
-  }
-
-  .resonance-grid > div {
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-    overflow: hidden;
-  }
-
-  .resonance-controls {
-    padding: 8px 10px;
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
   }
 
   #resonanceCanvas {
@@ -801,15 +745,12 @@
   /* ══════════════════════════════════════
      RESPONSIVE TWEAKS
   ══════════════════════════════════════ */
-  /* Mobile: fix returns-chart height, hide complex lattice chart */
-  @media (max-width: 767px) {
-    .returns-chart { min-height: 180px; border-top: 1px solid var(--border); }
-    .lattice-chart { min-height: 200px; }
+  @media (max-width: 1100px) {
+    .returns-grid { grid-template-columns: 1fr 1fr; }
+    .returns-chart { grid-column: 1 / -1; border-top: 1px solid var(--border); }
+    .lattice-grid { grid-template-columns: 1fr; }
+    .ob-grid { grid-template-columns: 1fr; }
     .resonance-grid { grid-template-columns: 1fr; }
-    .ticker-tape { display: none; } /* save space on mobile */
-    .status-bar { display: none; } /* simplify mobile view */
-    .panel { min-height: 0; } /* allow natural sizing on mobile */
-    /* Show a mobile-only summary bar instead */
   }
 
   /* ══════════════════════════════════════
@@ -1192,72 +1133,6 @@
 
 <script>
 // ═══════════════════════════════════════════════════════════
-//  LIVE METRICS API — fetchLiveMetrics()
-//  Reads ./metrics.json and auto-updates UI + charts
-//  Called on load + every 60s via setInterval
-// ═══════════════════════════════════════════════════════════
-let returnsDualChartRef = null; // will be set after chart init
-let latticeChartRef = null;
-
-async function fetchLiveMetrics() {
-  try {
-    const res = await fetch('./metrics.json', { cache: 'no-store' });
-    if (!res.ok) return; // silently skip if file doesn't exist yet
-    const data = await res.json();
-
-    // ── Update headline numbers ──
-    if (data.totalReturn !== undefined) {
-      const el = document.getElementById('totalReturn');
-      if (el) el.textContent = `+${Number(data.totalReturn).toFixed(2)}%`;
-    }
-    if (data.tradeCount !== undefined) {
-      const el = document.getElementById('tradeCount');
-      if (el) el.textContent = `${data.tradeCount} FILLS`;
-    }
-
-    // ── Update stat chips ──
-    if (data.winRate !== undefined) {
-      const chips = document.querySelectorAll('.stat-chip-value');
-      // chips[0]=trades, [1]=winrate, [2]=sharpe, [3]=maxdd
-      if (chips[1]) chips[1].textContent = `${Number(data.winRate).toFixed(2)}%`;
-    }
-    if (data.sharpe !== undefined) {
-      const chips = document.querySelectorAll('.stat-chip-value');
-      if (chips[2]) chips[2].textContent = Number(data.sharpe).toFixed(2);
-    }
-    if (data.maxDD !== undefined) {
-      const chips = document.querySelectorAll('.stat-chip-value');
-      if (chips[3]) chips[3].textContent = `−${Math.abs(data.maxDD).toFixed(1)}%`;
-    }
-
-    // ── Update returns dual chart ──
-    if (returnsDualChartRef && data.compoundSeries && data.fixedSeries) {
-      returnsDualChartRef.data.datasets[0].data = data.compoundSeries;
-      returnsDualChartRef.data.datasets[1].data = data.fixedSeries;
-      if (data.labels) returnsDualChartRef.data.labels = data.labels;
-      returnsDualChartRef.update('active');
-    }
-
-    // ── Update lattice bar chart ──
-    if (latticeChartRef && data.latticeDistribution) {
-      latticeChartRef.data.datasets[0].data = data.latticeDistribution;
-      latticeChartRef.update('active');
-    }
-
-    console.log(`[fetchLiveMetrics] ✓ ${new Date().toLocaleTimeString('zh-TW')} — data refreshed`);
-  } catch (err) {
-    // Silently ignore — server may not have metrics.json yet
-    // console.warn('[fetchLiveMetrics] No data:', err.message);
-  }
-}
-
-// ── Auto-refresh every 60 seconds ──
-window.addEventListener('load', () => {
-  fetchLiveMetrics();
-  setInterval(fetchLiveMetrics, 60000);
-});
-
-// ═══════════════════════════════════════════════════════════
 //  UTILITY
 // ═══════════════════════════════════════════════════════════
 const $ = id => document.getElementById(id);
@@ -1276,7 +1151,6 @@ const NEON_YELLOW = '#FFE500';
 //  MATRIX RAIN BACKGROUND
 // ═══════════════════════════════════════════════════════════
 (function initMatrix() {
-  if (window.innerWidth < 768) return; // skip on mobile for performance
   const canvas = $('matrixCanvas');
   const ctx = canvas.getContext('2d');
   let W, H, cols, drops;
@@ -1384,7 +1258,13 @@ Chart.defaults.font.size = 9;
   cyanGrad.addColorStop(0, 'rgba(0,212,255,0.1)');
   cyanGrad.addColorStop(1, 'rgba(0,212,255,0)');
 
-  returnsDualChartRef = new Chart(ctx, {
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Full Compound',
           data: compound,
           borderColor: NEON_GREEN,
           borderWidth: 2,
@@ -1492,7 +1372,7 @@ initSparkline('sparkPEPE', NEON_ORANGE, 10);
   });
 
   const ctx = $('latticeChart').getContext('2d');
-  latticeChartRef = new Chart(ctx, {
+  new Chart(ctx, {
     type: 'bar',
     data: {
       labels: bins,
@@ -1655,11 +1535,9 @@ initSparkline('sparkPEPE', NEON_ORANGE, 10);
 })();
 
 // ═══════════════════════════════════════════════════════════
-//  BLOCK 4: 3-TF RESONANCE CANVAS (desktop only)
+//  BLOCK 4: 3-TF RESONANCE CANVAS
 // ═══════════════════════════════════════════════════════════
 (function initResonance() {
-  // Skip canvas animation on mobile — prevents heat & browser lag
-  if (window.innerWidth < 768) return;
   const canvas = $('resonanceCanvas');
   const ctx = canvas.getContext('2d');
   let W, H, iter = 0;
